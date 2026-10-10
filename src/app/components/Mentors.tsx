@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { forecast } from '../../engine/query';
+import { advisorEstimate, dayFactorNotes, uncPct } from '../../engine/query';
 import type { AppState } from '../../engine/types';
 
 export default function Mentors({ state }: { state: AppState }) {
@@ -20,7 +20,9 @@ export default function Mentors({ state }: { state: AppState }) {
     adv = '跟降的账迟早要还----你看，老客已经在走了。';
     old = '降价？我摆了二十年，没见过跟降价能长久的。';
   } else {
-    const f = forecast(g);
+    const v = advisorEstimate(g);
+    const u = uncPct(g);
+    const notes = dayFactorNotes(g);
     const missing: string[] = [];
     if (!g.gaps.price.filled) missing.push('价格带');
     if (!g.gaps.crowd.filled) missing.push('翻台率');
@@ -29,14 +31,16 @@ export default function Mentors({ state }: { state: AppState }) {
     adv = (
       <>
         {'今晚 '}
-        <em>{f.v}±{f.u}</em>。
+        <em>{v}±{u}%</em>
+        {notes.length ? <span className="mut">{'（' + notes.join('、') + '）'}</span> : null}
+        。
         {missing.length
           ? <span className="guessed">{missing.join(' / ') + '----我还在猜。'}</span>
           : '每个数都是你亲手拿的。'}
       </>
     );
     const og = g.oldGuess;
-    const guessCls = og > f.v + 10 ? '（比 AI 高）' : og < f.v - 10 ? '（比 AI 低）' : '';
+    const guessCls = og > v + 10 ? '（比军师高）' : og < v - 10 ? '（比军师低）' : '';
     old = (
       <>
         {'我看今晚 '}

@@ -20,6 +20,40 @@ export function multCore(g: GameData): number {
 
 export const forecast = (g: GameData) => ({ v: Math.round(L.target * multCore(g)), u: unc(g) });
 
+/** 今日乘数：天气与日历。玩家可见、军师与开奖共用同一套口径 */
+export function dayFactor(g: GameData): number {
+  let m = 1;
+  if (g.weather === '小雨') m *= 0.82;
+  else if (g.weather === '暴雨') m *= 0.5;
+  else if (g.weather === '阴') m *= 0.95;
+  const cal = CAL_EVENTS[g.day];
+  if (cal) {
+    if (cal.indexOf('周末') >= 0) m *= 1.2;
+    if (cal.indexOf('游客高峰') >= 0) m *= 1.35;
+    if (cal.indexOf('大闸蟹') >= 0) m *= 1.15;
+  }
+  return m;
+}
+
+/** 今日乘数的说明（给文案用，数字与 dayFactor 同源） */
+export function dayFactorNotes(g: GameData): string[] {
+  const notes: string[] = [];
+  if (g.weather === '小雨') notes.push('下雨 ×0.82');
+  else if (g.weather === '暴雨') notes.push('暴雨 ×0.5');
+  else if (g.weather === '阴') notes.push('阴天 ×0.95');
+  const cal = CAL_EVENTS[g.day];
+  if (cal) {
+    if (cal.indexOf('周末') >= 0) notes.push('周末 ×1.2');
+    if (cal.indexOf('游客高峰') >= 0) notes.push('游客高峰 ×1.35');
+    if (cal.indexOf('大闸蟹') >= 0) notes.push('到货 ×1.15');
+  }
+  return notes;
+}
+
+/** 军师今晚的估计：基座 × 今日天气 × 今日日历。区间仍是 ±u% */
+export const advisorEstimate = (g: GameData) =>
+  Math.max(40, Math.round(forecast(g).v * dayFactor(g)));
+
 /** 老摊主：一个点估计，比军师偏差大，但有自己偏向 */
 export function oldMasterEstimate(g: GameData): number {
   const f = forecast(g);
@@ -44,6 +78,9 @@ export const filledCount = (g: GameData) => GAPS.filter((x) => g.gaps[x.key].fil
 export const manualFilled = (g: GameData) =>
   GAPS.filter((x) => x.src !== '自动' && g.gaps[x.key].filled).length;
 export const unc = (g: GameData) => [40, 30, 20, 12, 8][manualFilled(g)];
+
+/** 同上，名字点明单位是百分比——UI 里一律用它渲染 ±X% */
+export const uncPct = (g: GameData) => unc(g);
 
 export const canBet = (g: GameData) => g.phase === 'bet' && !g.finished;
 

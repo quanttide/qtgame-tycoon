@@ -1,13 +1,14 @@
 import { Fragment } from 'react';
 import type { ReactNode } from 'react';
 import { BET_TIERS, CAL_EVENTS, GAPS, L } from '../../engine/constants';
-import { filledCount, forecast, money } from '../../engine/query';
+import { advisorEstimate, filledCount, money, uncPct } from '../../engine/query';
 import type { UiProps } from '../props';
 
 export default function BetPanel({ state, dispatch }: UiProps) {
   const g = state.game;
-  const f = forecast(g);
-  const lo = f.v - f.u, hi = f.v + f.u;
+  const v = advisorEstimate(g);
+  const u = uncPct(g);
+  const lo = v * (1 - u / 100), hi = v * (1 + u / 100);
   const cal = CAL_EVENTS[g.day];
 
   const intel: ReactNode[] = [<Fragment key="w">天气 <b>{g.weather}</b></Fragment>];
@@ -24,7 +25,7 @@ export default function BetPanel({ state, dispatch }: UiProps) {
     <>
       <div className="board">
         <div className="fc-line">
-          <span className="fc-big" id="b-fc">{f.v + '±' + f.u}</span>
+          <span className="fc-big" id="b-fc">{v + '±' + u + '%'}</span>
           <span className="fc-cap">军师今晚预测</span>
         </div>
         <div className="intel" id="b-intel">

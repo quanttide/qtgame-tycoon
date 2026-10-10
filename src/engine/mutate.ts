@@ -1,7 +1,7 @@
-import { BLIND_CRIT, BLIND_NAMES, CAL_EVENTS, GAPS, L } from './constants';
+import { BLIND_CRIT, BLIND_NAMES, GAPS, L } from './constants';
 import type { BlindScores, GameData, GapKey, Weather } from './types';
 import {
-  blindComplete, canBet, currentPrice, forecast, money, multCore,
+  blindComplete, canBet, currentPrice, dayFactor, forecast, money, multCore,
   oldMasterEstimate, unc, weekStats,
 } from './query';
 
@@ -30,15 +30,7 @@ export function actualDemand(g: GameData): number {
   const half = f.u / 100;
   const r = (Math.random() * 2 - 1) * half;
   let d = f.v * (1 + r);
-  if (g.weather === '小雨') d *= 0.82;
-  else if (g.weather === '暴雨') d *= 0.5;
-  else if (g.weather === '阴') d *= 0.95;
-  const cal = CAL_EVENTS[g.day];
-  if (cal) {
-    if (cal.indexOf('周末') >= 0) d *= 1.2;
-    if (cal.indexOf('游客高峰') >= 0) d *= 1.35;
-    if (cal.indexOf('大闸蟹') >= 0) d *= 1.15;
-  }
+  d *= dayFactor(g);
   const qm = g.q.shift();
   if (qm !== undefined) d *= qm;
   if (g.wechat < 15) d *= 0.92;

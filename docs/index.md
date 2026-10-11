@@ -4,7 +4,7 @@
 
 游戏的主题直接取自 demo 的验证结论：AI 能把开店计划从 0 推到 70 分，最后 30 分靠实地。军师承包上游（信息、逻辑、结构），玩家承包下游（现场、身体、随机性），整个玩法围绕这条分工线展开。
 
-开发文档见 [dev-guide](./dev-guide/index.md)：[玩法](./dev-guide/gameplay.md)、[页面](./dev-guide/pages.md)、[ROADMAP](../ROADMAP.md)。
+开发文档见 [dev-guide](./dev-guide/index.md)：[玩法规则](./dev-guide/rules/index.md)、[页面规格](./dev-guide/screens/index.md)、[ROADMAP](../ROADMAP.md)。
 
 ## 核心循环
 
@@ -14,7 +14,7 @@
 4. 军师用回填数据重算，预测误差逐周收窄；
 5. 周结算，累计达标进度，触线则晋级，跌破底线则出局。
 
-四幕结构与周循环的细节见 [玩法](./dev-guide/gameplay.md)。
+四幕结构与周循环的细节见 [进程](./dev-guide/rules/progression.md)。
 
 ## 三阶段进程
 
@@ -71,7 +71,7 @@
 
 ## 界面呈现
 
-界面遵循场景驱动的五页结构（开场、主场景、周结算、结局、复盘），见 [页面](./dev-guide/pages.md)：场景区居中、军师对话化，账目与公式收进抽屉。回合粒度为日（盘点、营业、事件）与周（结算、达标进度），阶段晋级按月判定；结算的信息层级沿用 [GUI 三层报表](../examples/shop-launch/docs/ledger.md)，结论大字定生死，收支逐项可核查，参数折叠。
+界面遵循场景驱动的五页结构（开场、主场景、周结算、结局、复盘），见 [页面规格](./dev-guide/screens/index.md)：场景区居中、军师对话化，账目与公式收进抽屉。回合粒度为日（盘点、营业、事件）与周（结算、达标进度），阶段晋级按月判定；结算的信息层级沿用 [GUI 三层报表](../examples/shop-launch/docs/ledger.md)，结论大字定生死，收支逐项可核查，参数折叠。
 
 ## demo 对应关系
 

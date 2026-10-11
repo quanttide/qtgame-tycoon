@@ -1,6 +1,6 @@
 # ROADMAP
 
-实施计划，合并原先分散在三处的改造顺序与落地顺序。页面规格见 [页面](./docs/dev-guide/pages.md)，脚本节拍见 [玩法](./docs/dev-guide/gameplay.md)。
+实施计划，合并原先分散在三处的改造顺序与落地顺序。页面规格见 [页面规格](./docs/dev-guide/screens/index.md)，脚本节拍见 [玩法规则](./docs/dev-guide/rules/progression.md)。
 
 ## 阶段
 

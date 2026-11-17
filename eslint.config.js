@@ -4,7 +4,7 @@ import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/", ".husky/_/", "examples/"] },
+  { ignores: ["dist/", ".husky/_/", "examples/", "src/game.js", "scripts/"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

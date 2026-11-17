@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 
-// base 用相对路径：产物同时服务于 OSS 自定义域名根路径与 GitHub Pages 子路径
+// 当前 src/ 为原生 JS 单页 demo，无 TS/React 源码，构建由 scripts/build.mjs 直接复制静态文件。
+// 这里仅保留 Vite dev server 配置；base 用相对路径以兼容 OSS 自定义域名根路径与 Pages 子路径。
 export default defineConfig({
-  plugins: [react()],
   base: "./",
 });

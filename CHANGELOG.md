@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-17
+
+### Changed
+
+- `src/` 整包切换为 examples 速玩版 demo（原生 JS 单页、7 天一局、含两版 BGM），移除 React + TypeScript 工程
+- 构建改为静态复制（`npm run build` 直接产出 `dist/`），不再依赖 tsc / Vite 打包；入口 `index.html` 指向 demo
+- CI 部署上传步骤适配扁平产物（全站 no-cache），提交钩子去掉 `tsc -b`
+
 ## [0.0.2] - 2026-11-16
 
 ### Added

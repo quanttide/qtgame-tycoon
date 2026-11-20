@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- 适配小红书小工具容器（按 `.agents/minitool-zip-builder` 规范改造，同一套源码继续服务 Web 发布）：
+  - 存档：容器内改用容器 Storage（客户端 9.46+，异步读回后再做启动校正）；`localStorage` 仅保留给非容器环境与明确低于 9.46 的客户端，容器内版本未知/缺方法/读写失败一律不回退浏览器存储
+  - 复制：移除剪贴板类 API 调用，改为展示可复制文本弹层（触屏长按、桌面选中后 Ctrl/Cmd+C）
+  - CSS：Chrome 61 基线改造——flex `gap` 改子项 margin 基线 + 行为检测切换 `.supports-flex-gap` 增强层，grid `gap` 改 `grid-gap`，`inset` 改物理属性，`aspect-ratio` 改 padding-top 比例盒
+  - 首屏：`index.html` 增加静态启动骨架（JS 未运行时可见标题与准备状态，`render()` 启动后整体替换）
+  - 音频：容器内直接用干净相对路径加载 BGM（发布域缓存参数仅保留在 Web 发布链路）
+
 ## [0.1.0] - 2026-11-17
 
 ### Changed

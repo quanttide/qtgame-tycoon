@@ -358,18 +358,41 @@
       mascots: [], cycle: 1, maxCycle: 1, clears: 0, cycleBest: [],
       lastDay: '', streak: 0, coins: 0, totalNights: 0, totalJackpots: 0, tries: 0 };
   }
-  var SAVE = (function () {
+  // ===== 存档存储 =====
+  // 容器内的正道是容器 Storage（客户端 9.46+）；localStorage 只作两类必要兼容：
+  // ① 非容器环境（普通浏览器）；② 明确低于 9.46 的客户端。
+  // 容器内版本未知、方法缺失或读写失败一律不回退浏览器存储，只保留内存状态。
+  var MT = (window.xhs && window.xhs.miniTool) || null;
+  var storeMode = 'browser';  // 'container' | 'browser' | 'pending' | 'memory'
+  var storeReady = false;     // 容器路径：首次读取是否完成
+  var storeDirty = false;     // 首次读取完成前是否已有写入
+  function readBuildVersion() {
+    var lo = window.xhs && window.xhs.launchOptions;
+    var v = lo && lo.miniToolEnv && Number(lo.miniToolEnv.buildVersion);
+    return v ? Math.floor(v / 1000) : 0;   // 末三位是编译序号，判断版本时忽略
+  }
+  if (!window.xhs) storeMode = 'browser';
+  else if (readBuildVersion() >= 9460) storeMode = 'container';
+  else if (readBuildVersion() > 0) storeMode = 'browser';  // 明确低于 9.46 的必要兼容
+  else storeMode = 'pending';                              // 版本未知，异步确认后再定
+  function loadBrowserSave() {
     try { return Object.assign(defaultSave(), JSON.parse(localStorage.getItem(KEY) || '{}')); }
     catch (e) { return defaultSave(); }
-  })();
-  // 旧版「全通后停在 cleared=true」= 第 1 周目三段全通。
-  // 必须先补齐该周目应得的 3 位吉祥物，才有资格进入第 2 周目。
-  if (SAVE.cleared && !(SAVE.cycle > 1)) {
-    SAVE.clears = Math.max(SAVE.clears || 0, 1);
-    SAVE.cycle = 2; SAVE.maxCycle = Math.max(SAVE.maxCycle || 1, 2);
-    SAVE.cleared = false; SAVE.stage = 0; SAVE.stageBest = [0, 0, 0];
   }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(SAVE)); } catch (e) {} }
+  var SAVE = (storeMode === 'container' || storeMode === 'pending') ? defaultSave() : loadBrowserSave();
+  function save() {
+    try {
+      if (storeMode === 'container') {
+        if (!storeReady) { storeDirty = true; return; }   // 读取完成前只记脏，不落盘
+        var r = MT.setStorage({ key: KEY, data: JSON.stringify(SAVE) });
+        if (r && typeof r.catch === 'function') r.catch(function () {});
+      } else if (storeMode === 'browser') {
+        localStorage.setItem(KEY, JSON.stringify(SAVE));
+      } else if (storeMode === 'pending') {
+        storeDirty = true;                               // 路径未定，先记下有改动
+      } // memory：容器缺能力，不回退浏览器存储，仅留在内存
+    } catch (e) {}
+  }
 
   // ==================== 周目门槛 & 吉祥物永久保底 ====================
   // clears = 已经「三段全通」的周目数；合法的最大周目只能是 clears + 1。
@@ -393,14 +416,70 @@
     }
     SAVE.mascots.sort(function (a, b) { return a - b; });
   }
-  // 门槛校正：没过完上一周目，绝不允许待在更高的周目
-  var ceilNow = cycleCeiling();
-  if ((SAVE.cycle || 1) > ceilNow) {
-    SAVE.cycle = ceilNow; SAVE.stage = 0; SAVE.stageBest = [0, 0, 0];
+  // 启动校正：旧版存档修正 + 周目门槛 + 吉祥物保底（容器路径读回存档后再执行）
+  function normalizeSave() {
+    // 旧版「全通后停在 cleared=true」= 第 1 周目三段全通。
+    // 必须先补齐该周目应得的 3 位吉祥物，才有资格进入第 2 周目。
+    if (SAVE.cleared && !(SAVE.cycle > 1)) {
+      SAVE.clears = Math.max(SAVE.clears || 0, 1);
+      SAVE.cycle = 2; SAVE.maxCycle = Math.max(SAVE.maxCycle || 1, 2);
+      SAVE.cleared = false; SAVE.stage = 0; SAVE.stageBest = [0, 0, 0];
+    }
+    // 门槛校正：没过完上一周目，绝不允许待在更高的周目
+    var ceilNow = cycleCeiling();
+    if ((SAVE.cycle || 1) > ceilNow) {
+      SAVE.cycle = ceilNow; SAVE.stage = 0; SAVE.stageBest = [0, 0, 0];
+    }
+    SAVE.maxCycle = Math.max(SAVE.maxCycle || 1, SAVE.cycle || 1);
+    ensureMascots();
   }
-  SAVE.maxCycle = Math.max(SAVE.maxCycle || 1, SAVE.cycle || 1);
-  ensureMascots();
-  save();
+  // 容器路径：异步读回存档 → 校正 → 写回。读取完成前 save() 只记脏，
+  // 避免用默认存档覆盖已有进度；读失败不写盘、不回退浏览器存储。
+  function hydrateStore() {
+    function finish(data, ok) {
+      var parsed = null;
+      if (ok && data) { try { parsed = JSON.parse(data); } catch (e) { parsed = null; } }
+      var userActed = storeDirty;
+      if (!userActed && parsed) SAVE = Object.assign(defaultSave(), parsed);
+      storeReady = true;
+      normalizeSave();
+      if (ok || userActed) save();
+      if (!userActed && parsed && screen === 'home') render();
+    }
+    try {
+      var p = MT.getStorage({ key: KEY });
+      if (p && typeof p.then === 'function') {
+        p.then(function (res) { finish(res && res.data, true); },
+          function () { finish(null, false); });
+      } else finish(null, false);
+    } catch (e) { finish(null, false); }
+  }
+  // 版本未知：异步确认客户端版本后再定路径
+  function resolvePendingStore() {
+    function settle(mode) {
+      storeMode = mode;
+      if (mode === 'container') hydrateStore();
+      else if (mode === 'browser') {
+        if (!storeDirty) SAVE = loadBrowserSave();
+        storeReady = true; normalizeSave(); save();
+      } else { storeReady = true; normalizeSave(); }
+    }
+    try {
+      if (!MT || typeof MT.getLaunchOptions !== 'function') { settle('memory'); return; }
+      var p = MT.getLaunchOptions();
+      if (!p || typeof p.then !== 'function') { settle('memory'); return; }
+      p.then(function (lo) {
+        var v = lo && lo.miniToolEnv && Number(lo.miniToolEnv.buildVersion);
+        v = v ? Math.floor(v / 1000) : 0;
+        if (v >= 9460 && MT.setStorage && MT.getStorage) settle('container');
+        else if (v > 0) settle('browser');   // 明确低于 9.46 的必要兼容
+        else settle('memory');               // 版本仍未知：不回退浏览器存储
+      }, function () { settle('memory'); });
+    } catch (e) { settle('memory'); }
+  }
+  if (storeMode === 'container') hydrateStore();
+  else if (storeMode === 'pending') resolvePendingStore();
+  else { storeReady = true; normalizeSave(); save(); }
 
   // ==================== 随机 ====================
   function mulberry32(a) {
@@ -503,8 +582,10 @@
       if (audio) return audio;
       try {
         var bgmFile = BGM_ALT ? 'bgm_alt.mp3' : 'bgm.mp3';
-        // 带分享码走发布域校验，再挂版本号：换曲后不会一直播浏览器缓存里的旧 mp3
-        audio = new Audio(bgmFile + location.search + (location.search ? '&' : '?') + 'v=20261115o');
+        // 发布域带分享码走校验并挂版本号（换曲后不会播浏览器缓存旧曲）；
+        // 容器内离线加载，无发布域校验，直接用干净相对路径
+        audio = new Audio(window.xhs ? bgmFile :
+          bgmFile + location.search + (location.search ? '&' : '?') + 'v=20261115o');
         audio.loop = true;
         audio.preload = 'auto';
         audio.volume = 0.20;
@@ -1270,7 +1351,7 @@
     } catch (e) { link = location.href.split('?')[0]; }
     var txt = '【滁州夜市 · 串串摊 速玩版】我在夜市摆摊，缺个搭子！\n' +
       '7 天速玩：打听线索、写价牌、押签，看谁赚得多～\n点开就能玩：' + link;
-    copyText(txt, '链接已复制 · 发给好友！机会 +' + TOPUP_TIMES + ' 次、消息金 +¥' + TOPUP_CASH);
+    copyText(txt, '链接已备好 · 复制发给好友！机会 +' + TOPUP_TIMES + ' 次、消息金 +¥' + TOPUP_CASH);
     grantTopup();
   }
   function playAdDemo() {
@@ -1727,25 +1808,38 @@
       '\n拿下称号【' + t.name + '】——' + t.desc +
       '\n来 4399 搜「滁州夜市」，看你能不能比我赚得多！';
   }
+  // 容器禁用剪贴板类 API（在线文档已禁用清单）：统一改为展示可复制文本，
+  // 触屏长按复制、桌面选中后 Ctrl/Cmd+C；弹层不挡后续逻辑（如加次数）。
   function copyText(txt, msg) {
-    var m = msg || '战书已复制，发给好友吧！';
-    // 浏览器可能在无用户手势时直接抛错；复制失败也不能挡住后续的加次数逻辑
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(txt).then(function () { toast(m); },
-          function () { fallbackCopy(txt, m); });
-      } else fallbackCopy(txt, m);
-    } catch (e) { fallbackCopy(txt, m); }
+    showCopyable(txt, msg || '战书已备好，复制发给好友吧！');
   }
-  function fallbackCopy(txt, msg) {
-    var m = msg || '战书已复制，发给好友吧！';
-    try {
-      var ta = document.createElement('textarea');
-      ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      toast(m);
-    } catch (e) { toast('复制失败，长按下方文字手动复制～'); }
+  function showCopyable(txt, hint) {
+    var old = document.querySelector('.copy-mask');
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+    var mask = document.createElement('div');
+    mask.className = 'copy-mask';
+    var box = document.createElement('div');
+    box.className = 'copy-box';
+    var head = document.createElement('div');
+    head.className = 'copy-hint';
+    head.textContent = hint || '长按下方文字复制';
+    var body = document.createElement('div');
+    body.className = 'copy-text';
+    body.textContent = txt;
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'copy-close';
+    close.textContent = '知道了';
+    box.appendChild(head); box.appendChild(body); box.appendChild(close);
+    mask.appendChild(box);
+    document.body.appendChild(mask);
+    function shut() { if (mask.parentNode) mask.parentNode.removeChild(mask); }
+    close.addEventListener('click', shut);
+    mask.addEventListener('click', function (e) { if (e.target === mask) shut(); });
+    try {   // 桌面端直接选中，Ctrl/Cmd+C 即可
+      var sel = window.getSelection && window.getSelection();
+      if (sel && sel.selectAllChildren) sel.selectAllChildren(body);
+    } catch (e) {}
   }
 
   // ==================== 事件 ====================
@@ -1840,6 +1934,25 @@
         break;
     }
   });
+
+  // Chrome 61 不支持 flex gap：style.css 基线用子项 margin，能力检测通过后
+  // 给 <html> 加 .supports-flex-gap 切到 gap 增强层。只检测一次，不在渲染循环里测量。
+  (function () {
+    try {
+      var flex = document.createElement('div');
+      flex.style.position = 'absolute';
+      flex.style.visibility = 'hidden';
+      flex.style.display = 'flex';
+      flex.style.flexDirection = 'column';
+      flex.style.rowGap = '1px';
+      flex.appendChild(document.createElement('div'));
+      flex.appendChild(document.createElement('div'));
+      document.body.appendChild(flex);
+      var ok = flex.scrollHeight === 1;
+      flex.parentNode.removeChild(flex);
+      if (ok) document.documentElement.classList.add('supports-flex-gap');
+    } catch (e) {}
+  })();
 
   // ==================== 启动 ====================
   var PENDING = readDuelFromUrl();

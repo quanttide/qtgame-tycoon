@@ -9,7 +9,7 @@
   - 复制：移除剪贴板类 API 调用，改为展示可复制文本弹层（触屏长按、桌面选中后 Ctrl/Cmd+C）
   - CSS：Chrome 61 基线改造——flex `gap` 改子项 margin 基线 + 行为检测切换 `.supports-flex-gap` 增强层，grid `gap` 改 `grid-gap`，`inset` 改物理属性，`aspect-ratio` 改 padding-top 比例盒
   - 首屏：`index.html` 增加静态启动骨架（JS 未运行时可见标题与准备状态，`render()` 启动后整体替换）
-  - 音频：容器内直接用干净相对路径加载 BGM（发布域缓存参数仅保留在 Web 发布链路）
+  - 音频：小工具包不打包 BGM（平台仅接受静态资源类型，不接受音频）；容器内跳过 BGM 加载并给出提示，音效为 Web Audio 实时合成不受影响，Web 发布仍带两版 BGM
 
 ## [0.1.0] - 2026-11-17
 

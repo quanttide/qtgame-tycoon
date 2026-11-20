@@ -578,14 +578,15 @@
   var BGM_NAME = BGM_ALT ? '胡旋蹦灯调' : '西市上头鼓';
   var bgm = (function () {
     var audio = null;
+    var missing = false;   // 小工具包不打包 mp3（平台仅接受静态资源类型），容器内不开 BGM
     function el() {
+      if (missing) return null;
       if (audio) return audio;
       try {
+        if (window.xhs) { missing = true; return null; }   // 容器内无音频文件，不发无效请求
         var bgmFile = BGM_ALT ? 'bgm_alt.mp3' : 'bgm.mp3';
-        // 发布域带分享码走校验并挂版本号（换曲后不会播浏览器缓存旧曲）；
-        // 容器内离线加载，无发布域校验，直接用干净相对路径
-        audio = new Audio(window.xhs ? bgmFile :
-          bgmFile + location.search + (location.search ? '&' : '?') + 'v=20261115o');
+        // 发布域带分享码走校验并挂版本号：换曲后不会一直播浏览器缓存里的旧 mp3
+        audio = new Audio(bgmFile + location.search + (location.search ? '&' : '?') + 'v=20261115o');
         audio.loop = true;
         audio.preload = 'auto';
         audio.volume = 0.20;
@@ -595,7 +596,7 @@
       return audio;
     }
     function play() {
-      if (SAVE.bgm === false) return;
+      if (missing || SAVE.bgm === false) return;
       try {
         var a = el(); if (!a) return;
         var p = a.play();
@@ -604,6 +605,7 @@
     }
     function pause() { if (audio) { try { audio.pause(); } catch (e) {} } }
     function toggle() {
+      if (missing) { toast('本版本未打包背景音乐，音效不受影响'); return; }
       SAVE.bgm = !(SAVE.bgm !== false);
       save();
       if (SAVE.bgm) play(); else pause();

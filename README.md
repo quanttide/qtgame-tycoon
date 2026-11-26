@@ -21,16 +21,30 @@ npm run build # 类型检查 + 构建，产物在 dist/
 ## 项目结构
 
 ```
-index.html       # Vite 入口（根目录）
+index.html       # Vite 入口（根目录，npm run dev 用）
 src/
-  main.tsx       # React 挂载入口
-  App.tsx        # 五页状态机与押注/开奖流转
-  styles.css     # 全局样式（原单文件 CSS 逐字节迁移）
-  engine/        # 纯游戏逻辑：types 契约 / constants 数据表 / query 只读查询 / mutate 状态变更 / events 事件 / reducer 流转，不依赖 DOM，可在 Node 中加载做数值模拟
-  app/           # 页面与弹层组件
+  index.html     # 单页游戏入口（速玩版 demo）
+  game.js        # 游戏全部逻辑与渲染（原生 JS，无框架）
+  style.css      # 全部样式（纯 CSS，无外部依赖）
+  bgm.mp3 / bgm_alt.mp3  # 两版 BGM（官网与 TapTap 打包；小红书包不含音频）
+scripts/
+  build.mjs      # 多平台构建（web / xhs / taptap）
+.agents/         # 小红书小工具打包与创服平台上传的 skill
 docs/            # 开发文档（玩法、页面设计）
 .github/         # CI/CD
 ```
+
+## 多平台发布
+
+一套源码（`src/`），三个发布目标，构建期只差包体形态：
+
+| 目标 | 命令 | 产物 | 怎么发 |
+|------|------|------|--------|
+| 自己官网 | `npm run build` | `dist/`（资源入 `assets/` + 相对 `<base>`，含两版 BGM） | push main → CI 自动部署 tycoon.game.quanttide.com |
+| 小红书小工具 | `npm run build:xhs` | `dist-xhs/` + `dist-xhs.zip`（平铺、`index.html` 在根、不含音频） | 按 `.agents/minitool-zip-builder` 上传创服平台 |
+| TapTap H5 小游戏 | `npm run build:taptap` | `dist-taptap/`（平铺、`index.html` 在根、含两版 BGM） | TapTap MCP `prepare_h5_upload` → `upload_h5_game`（横竖屏选竖屏） |
+
+运行时平台判定与构建无关，都在 `src/game.js`：检测 `window.xhs` 走容器分支（容器 Storage 存档、长按复制、跳过 BGM），否则走浏览器分支——官网与 TapTap 同为浏览器环境，共用一条分支。平台差异资料见领域仓 `data/library/taptap/`。
 
 ## 代码质量
 

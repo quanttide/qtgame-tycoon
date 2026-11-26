@@ -2,7 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- 一套源码多平台发布：`scripts/build.mjs` 支持目标参数——`npm run build`（自己官网 `dist/`，资源入 `assets/` + 相对 `<base>`，行为与改造前一致）、`npm run build:xhs`（小红书 `dist-xhs/` + `dist-xhs.zip`，平铺、`index.html` 在根、不含音频）、`npm run build:taptap`（TapTap `dist-taptap/`，平铺、`index.html` 在根、含两版 BGM）；README 增「多平台发布」节
+
 ### Changed
+
+- 移除 4399 渠道文案：成绩卡结尾、激励位两处提示与两处注释改为平台中立表述（4399 渠道取消）；存档 key `cz4399_lite_v1` 保留不动——改名会让官网存量玩家存档丢失
+- README「项目结构」节纠正为速玩版 demo 实况（原 React/Vite 工程描述已过期）
 
 - 适配小红书小工具容器（按 `.agents/minitool-zip-builder` 规范改造，同一套源码继续服务 Web 发布）：
   - 存档：容器内改用容器 Storage（客户端 9.46+，异步读回后再做启动校正）；`localStorage` 仅保留给非容器环境与明确低于 9.46 的客户端，容器内版本未知/缺方法/读写失败一律不回退浏览器存储

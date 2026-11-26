@@ -1048,7 +1048,7 @@
       '<div class="topup-btns">' +
       '<button class="btn topup-btn" data-act="topupShare">转 发 加 次 数</button>' +
       '<button class="btn topup-btn alt" data-act="topupAd">看 激 励 加 次 数</button>' +
-      '</div><div class="topup-note">静态版接不了真实广告 SDK，激励位为演示；4399 上线后换成平台激励视频即可。</div></div>';
+      '</div><div class="topup-note">静态版接不了真实广告 SDK，激励位为演示；接入平台激励视频后此处播放真实广告。</div></div>';
     return '<div class="card plan-card">' +
       '<div class="plan-title">今晚先去打听 <span class="muted">今晚还能跑 ' + G.clueLeft + ' 趟</span></div>' +
       purse +
@@ -1335,7 +1335,7 @@
 
   // 转发 / 激励：放宽次数与钱袋。纯静态 H5 接不了真实激励视频，
   // 这里用「复制邀请链接」和「演示位 3 秒」两条真实可完成的路径；
-  // 4399 上线后把 playAdDemo 换成平台激励视频回调即可。
+  // 接入平台激励视频后把 playAdDemo 换成平台回调即可。
   function grantTopup() {
     G.topups += 1;
     G.buyMax += TOPUP_TIMES;
@@ -1361,7 +1361,7 @@
     mask.className = 'ad-mask';
     mask.innerHTML = '<div class="ad-box"><div class="ad-tag">激 励 视 频 · 演 示 位</div>' +
       '<div class="ad-emoji">灯</div><div class="ad-title">夜市开张大吉</div>' +
-      '<div class="ad-sub">4399 上线后这里播放平台激励视频；本地版演示 3 秒后自动加次数。</div>' +
+      '<div class="ad-sub">接入平台激励视频后这里播放真实广告；本地版演示 3 秒后自动加次数。</div>' +
       '<div class="ad-count" id="adCount">3</div></div>';
     document.body.appendChild(mask);
     var left = 3;
@@ -1808,7 +1808,7 @@
       '\n7 天押准 ' + st.accurate + ' 晚，净赚 ¥' + st.totalProfit + '，平均只差 ' + st.avgDiff + ' 签' +
       '\n最赚的一晚 ¥' + st.bestNight + '，靠定价多赚 ¥' + st.priceGain + '，满堂彩 ' + st.jackpots + ' 次' +
       '\n拿下称号【' + t.name + '】——' + t.desc +
-      '\n来 4399 搜「滁州夜市」，看你能不能比我赚得多！';
+      '\n夜市见——你也来摆一摊，看谁更能赚！';
   }
   // 容器禁用剪贴板类 API（在线文档已禁用清单）：统一改为展示可复制文本，
   // 触屏长按复制、桌面选中后 Ctrl/Cmd+C；弹层不挡后续逻辑（如加次数）。

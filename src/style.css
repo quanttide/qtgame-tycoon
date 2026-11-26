@@ -624,7 +624,7 @@ body{
 .topup-btn{font-size:11px!important;padding:8px 3px!important;line-height:1.35;letter-spacing:1px}
 .topup-btn.alt{background:linear-gradient(180deg,#ffe6b0,#f6c875)!important}
 .topup-note{font-size:10px;color:#9a8468;margin-top:6px;line-height:1.5}
-/* 激励视频演示位（4399 上线后替换为平台 SDK） */
+/* 激励视频演示位（接入平台 SDK 后替换） */
 .ad-mask{position:fixed;top:0;right:0;bottom:0;left:0;z-index:9999;background:rgba(20,12,8,.82);
   display:flex;align-items:center;justify-content:center;padding:24px}
 .ad-box{width:100%;max-width:300px;background:linear-gradient(180deg,#fff9ec,#f3e2c2);

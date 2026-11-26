@@ -4,6 +4,8 @@
   "scripts": {
     "dev": "vite",
     "build": "node scripts/build.mjs",
+    "build:xhs": "node scripts/build.mjs xhs",
+    "build:taptap": "node scripts/build.mjs taptap",
     "preview": "vite preview",
     "lint": "eslint .",
     "typecheck": "node -e \"console.log('无 TypeScript 源码，跳过类型检查')\"",

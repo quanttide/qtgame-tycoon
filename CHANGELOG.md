@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-26
+
 ### Added
 
 - 一套源码多平台发布：`scripts/build.mjs` 支持目标参数——`npm run build`（自己官网 `dist/`，资源入 `assets/` + 相对 `<base>`，行为与改造前一致）、`npm run build:xhs`（小红书 `dist-xhs/` + `dist-xhs.zip`，平铺、`index.html` 在根、不含音频）、`npm run build:taptap`（TapTap `dist-taptap/`，平铺、`index.html` 在根、含两版 BGM）；README 增「多平台发布」节
